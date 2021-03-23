@@ -3,8 +3,12 @@ import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 
+import os, sys, pathlib
+
+sys.path.append( pathlib.Path(__file__).parent.absolute() )
+
 # module from this repository
-from node import Node
+from mdp_display.node import Node
 
 class MarkovChain:
 
@@ -151,14 +155,14 @@ class MarkovChain:
         for i in range(self.M.shape[0]):
             for j in range(self.M.shape[1]):
                 # self loops
-                if i == j:
+                if (i == j) and (self.M[i,j] > 0.0):
                     # Loop direction
                     if self.nodes[i].y >= 0:
                         self.nodes[i].add_self_loop(ax, prob = self.M[i,j], direction='up')
                     else:
                         self.nodes[i].add_self_loop(ax, prob = self.M[i,j], direction='down')
                 # directed arrows
-                elif self.M[i,j] > 0:
+                elif self.M[i,j] > 0.0:
                     self.add_arrow(ax, self.nodes[i], self.nodes[j], prob = self.M[i,j])
 
         plt.axis('off')
