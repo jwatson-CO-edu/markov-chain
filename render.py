@@ -6,11 +6,11 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 from random import random
 import os, sys, pathlib
-# module from this repository
-from mdp_display.node import Node
+
 
 
 ########## UTILITY FUNCTIONS ######################################################################
+
 
 def min_max( lst ):
     """ Return a tuple of the minimum and maximum of `lst` """
@@ -39,7 +39,8 @@ def total_arrow_len( centers, matx ):
 
 def get_text_dims( txt, pt=12, aspect=0.5 ):
     """ Imagine how big text would be by rendering it in an invisible figure """
-    fctr = 1/72
+    # NOTE: This is neither an accurate nor a terrible estimate, it seems to work
+    fctr = 1/72 # https://en.wikipedia.org/wiki/Point_(typography)
     unit = pt*fctr
     text = str( txt )
     lins = text.splitlines()
@@ -49,12 +50,118 @@ def get_text_dims( txt, pt=12, aspect=0.5 ):
     hTxt = nLin * unit * (1/aspect)
     return wTxt, hTxt
 
+
+########## MarkovDisplay ##########################################################################
+
+class RenderNode():
     
+    def __init__(
+        self, center, radius, label, 
+        facecolor='#2693de', edgecolor='#e6e6e6',
+        ring_facecolor='#a3a3a3', ring_edgecolor='#a3a3a3'
+        ):
+        """
+        Initializes a Markov Chain RenderNode(for drawing purposes)
+        Inputs:
+            - center : RenderNode (x,y) center
+            - radius : RenderNode radius
+            - label  : RenderNode label
+        """
+        self.center = center
+        self.radius = radius
+        self.label  = label
 
-########## MarkovChain ############################################################################
+        # For convinience: x, y coordinates of the center
+        self.x = center[0]
+        self.y = center[1]
+        
+        # Drawing config
+        self.node_facecolor = facecolor
+        self.node_edgecolor = edgecolor
+        
+        self.ring_facecolor = ring_facecolor
+        self.ring_edgecolor = ring_edgecolor
+        self.ring_width = 0.03  
+        
+        self.text_args = {
+            'ha': 'center', 
+            'va': 'center', 
+            'fontsize': 16
+        }
+    
+    
+    def add_circle(self, ax):
+        """
+        Add the annotated circle for the node
+        """
+        circle = mpatches.Circle(self.center, self.radius)
+        p = PatchCollection(
+            [circle], 
+            edgecolor = self.node_edgecolor, 
+            facecolor = self.node_facecolor
+        )
+        ax.add_collection(p)
+        ax.annotate(
+            self.label, 
+            xy = self.center, 
+            color = '#ffffff', 
+            **self.text_args
+        )
+        
+        
+    def add_self_loop(self, ax, prob=None, direction='up', decDig = 5):
+        """
+        Draws a self loop
+        """
+        if direction == 'up':
+            start = -30
+            angle = 180
+            ring_x = self.x
+            ring_y = self.y + self.radius
+            prob_y = self.y + self.radius*2.5
+            x_cent = ring_x - self.radius + (self.ring_width/2)
+            y_cent = ring_y - 0.15
+        else:
+            start = -210
+            angle = 0
+            ring_x = self.x
+            ring_y = self.y - self.radius
+            prob_y = self.y - self.radius*2.5
+            x_cent = ring_x + self.radius - (self.ring_width/2)
+            y_cent = ring_y + 0.15
+            
+        # Add the ring
+        ring = mpatches.Wedge(
+            (ring_x, ring_y), 
+            self.radius, 
+            start, 
+            angle, 
+            width = self.ring_width
+        )
+        # Add the triangle (arrow)
+        offset = 0.2
+        left   = [x_cent - offset, ring_y]
+        right  = [x_cent + offset, ring_y]
+        bottom = [(left[0]+right[0])/2., y_cent]
+        arrow  = plt.Polygon([left, right, bottom, left])
+
+        p = PatchCollection(
+            [ring, arrow], 
+            edgecolor = self.ring_edgecolor, 
+            facecolor = self.ring_facecolor
+        )
+        ax.add_collection(p)
+        
+        # Probability to add?
+        if prob:
+            ax.annotate(str( round( prob, decDig ) ), xy=(self.x, prob_y), color='#000000', **self.text_args)
 
 
-class MarkovChain:
+            
+########## MarkovDisplay ##########################################################################
+
+
+class MarkovDisplay:
 
     def __init__(self, M, labels, spaceFactor = 6, decDigits = 5):
         """
@@ -89,7 +196,7 @@ class MarkovChain:
         self.arrow_width      = 0.03
         self.arrow_head_width = 0.20
         
-        # Node Style
+        # RenderNode Style
         self.node_facecolor = '#2693de'
         self.node_edgecolor = '#e6e6e6'
         self.node_radius    = 0.5
@@ -109,7 +216,7 @@ class MarkovChain:
         """
         Positions the node centers given the number of states
         """
-        # Node positions
+        # RenderNode positions
         self.node_centers = []
         
         # 0. Find the smallest square number that will contain the nodes
@@ -183,7 +290,7 @@ class MarkovChain:
         # Set the nodes
         self.nodes = []
         for i in range(self.n_states):
-            node = Node(
+            node = RenderNode(
                 self.node_centers[i],
                 self.node_radius,
                 self.labels[i]

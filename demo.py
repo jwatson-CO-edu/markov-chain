@@ -2,7 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # modules from this repository
-from markovchain import MarkovChain
+import sys, os
+sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) ) )
+from mdp_display.render import MarkovDisplay
 
 def main():
     
@@ -10,8 +12,8 @@ def main():
     # 2-state Markov chain
     #--------------------------------------------------------------------------
     P = np.array([[0.8, 0.2], [0.1, 0.9]]) # Transition matrix
-    mc = MarkovChain(P, ['1', '2'])
-    mc.draw("../img/markov-chain-two-states.png")
+    mc = MarkovDisplay(P, ['1', '2'])
+    mc.draw("img/markov-chain-two-states.png")
     
     #--------------------------------------------------------------------------
     # 3-state Markov chain
@@ -21,8 +23,8 @@ def main():
         [0.1, 0.7, 0.2],
         [0.1, 0.7, 0.2],
     ])
-    mc = MarkovChain(P, ['A', 'B', 'C'])
-    mc.draw("../img/markov-chain-three-states.png")
+    mc = MarkovDisplay(P, ['A', 'B', 'C'])
+    mc.draw("img/markov-chain-three-states.png")
  
     #--------------------------------------------------------------------------
     # 4-state Markov chain
@@ -33,9 +35,26 @@ def main():
         [0.1, 0.0, 0.7, 0.2],
         [0.1, 0.0, 0.7, 0.2]
     ])
-    mc = MarkovChain(P, ['1', '2', '3', '4'])
-    mc.draw("../img/markov-chain-four-states.png")
- 
+    mc = MarkovDisplay(P, ['1', '2', '3', '4'])
+    mc.draw("img/markov-chain-four-states.png")
+    
+    #--------------------------------------------------------------------------
+    # N-state Markov chain
+    #--------------------------------------------------------------------------
+    from random import randrange
+    from mdp_display.MDP import normalize_discrete_dist, sample_bernoulli
+    N = 9
+    P = np.zeros( (N,N) )
+    for i in range(N-1):
+        row = np.zeros( N )
+        for j in range(i, N):
+            if (abs(i-j) <= 2) and sample_bernoulli( 0.65 ):
+                row[j] = randrange(20) 
+        P[i,:] = np.array(  normalize_discrete_dist( row )  )
+    mc = MarkovDisplay( P, [str(i) for i in range(1,N+1)] )
+    mc.draw("img/markov-chain-N-states.png")
+            
+    
 
 if __name__ == "__main__":
     main()

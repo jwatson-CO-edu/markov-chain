@@ -2,9 +2,6 @@
 
 Simple Markov Chain visualization module in Python. Only requires **matplotlib** and **numpy** to work.
 
-## Description
-
-The current version works with 2 to 4 states. 
 
 ## Getting Started
 
@@ -15,10 +12,10 @@ The current version works with 2 to 4 states.
 
 ### Installation
 
-Copy the files src/node.py and src/markovchain.py in your script directory. Then
+Clone this repo to your script directory. Then
 
 ```
-from markovchain import MarkovChain
+from mdp_display.render import MarkovDisplay
 ```
 
 #### 2-state Markov chain demo
@@ -29,7 +26,7 @@ mc = MarkovChain(P, ['1', '2'])
 mc.draw("../img/markov-chain-two-states.png")
 ```
 
-![two state markov chain transition diagram python](https://github.com/NaysanSaran/markov-chain/blob/master/img/markov-chain-two-states.png)
+![two state markov chain transition diagram python](https://github.com/jwatson-CO-edu/mdp_display/blob/master/img/markov-chain-two-states.png)
 
 
 #### 3-state Markov chain demo
@@ -44,7 +41,7 @@ mc = MarkovChain(P, ['A', 'B', 'C'])
 mc.draw("../img/markov-chain-three-states.png")
 ```
 
-![three state markov chain transition diagram python](https://github.com/NaysanSaran/markov-chain/blob/master/img/markov-chain-three-states.png)
+![three state markov chain transition diagram python](https://github.com/jwatson-CO-edu/mdp_display/blob/master/img/markov-chain-three-states.png)
 
 
 #### 4-state Markov chain demo
@@ -60,14 +57,29 @@ mc = MarkovChain(P, ['1', '2', '3', '4'])
 mc.draw("../img/markov-chain-four-states.png")
 ```
 
-![four state markov chain transition diagram python](https://github.com/NaysanSaran/markov-chain/blob/master/img/markov-chain-four-states.png)
+![four state markov chain transition diagram python](https://github.com/jwatson-CO-edu/mdp_display/blob/master/img/markov-chain-four-states.png)
+
+#### N-state Markov chain demo
+
+```
+from random import randrange
+from mdp_display.MDP import normalize_discrete_dist, sample_bernoulli
+N = 9
+P = np.zeros( (N,N) )
+for i in range(N-1):
+    row = np.zeros( N )
+    for j in range(i, N):
+        if (abs(i-j) <= 2) and sample_bernoulli( 0.65 ):
+            row[j] = randrange(20) 
+    P[i,:] = np.array(  normalize_discrete_dist( row )  )
+mc = MarkovDisplay( P, [str(i) for i in range(1,N+1)] )
+mc.draw("img/markov-chain-N-states.png")
+```  
+Note that parallel edges that span multiple rows/columns are not handled well.
+
+![N state markov chain transition diagram python](https://github.com/jwatson-CO-edu/mdp_display/blob/master/img/markov-chain-N-states.png)
 
 
-## Author
-
-[Naysan Saran](naysan.ca)
-
-Link to my [blog](https://naysan.ca/2020/07/08/drawing-state-transition-diagrams-in-python/).
 
 ## License
 
