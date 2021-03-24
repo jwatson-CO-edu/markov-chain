@@ -6,6 +6,7 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 from random import random
 import os, sys, pathlib
+from math import pi, cos, sin
 
 
 
@@ -113,22 +114,30 @@ class RenderNode():
         """
         Draws a self loop
         """
+        
+        arwLen  = 0.30
+        theta   = rand_range( -pi*3/8, +pi*3/8 )
+        radFctr = self.radius*2.25
+        rwHalf  = self.ring_width/2
+        
         if direction == 'up':
             start = -30
             angle = 180
             ring_x = self.x
             ring_y = self.y + self.radius
-            prob_y = self.y + self.radius*2.5
-            x_cent = ring_x - self.radius + (self.ring_width/2)
-            y_cent = ring_y - 0.15
+            prob_y = self.y + cos(theta)*radFctr
+            x_cent = ring_x - self.radius + rwHalf
+            y_cent = ring_y - arwLen
         else:
             start = -210
             angle = 0
             ring_x = self.x
             ring_y = self.y - self.radius
-            prob_y = self.y - self.radius*2.5
-            x_cent = ring_x + self.radius - (self.ring_width/2)
-            y_cent = ring_y + 0.15
+            prob_y = self.y - cos(theta)*radFctr
+            x_cent = ring_x + self.radius - rwHalf
+            y_cent = ring_y + arwLen
+            
+        prob_x = self.x + sin(theta)*radFctr
             
         # Add the ring
         ring = mpatches.Wedge(
@@ -139,7 +148,7 @@ class RenderNode():
             width = self.ring_width
         )
         # Add the triangle (arrow)
-        offset = 0.2
+        offset = 0.1
         left   = [x_cent - offset, ring_y]
         right  = [x_cent + offset, ring_y]
         bottom = [(left[0]+right[0])/2., y_cent]
@@ -154,7 +163,7 @@ class RenderNode():
         
         # Probability to add?
         if prob:
-            ax.annotate(str( round( prob, decDig ) ), xy=(self.x, prob_y), color='#000000', **self.text_args)
+            ax.annotate(str( round( prob, decDig ) ), xy=(prob_x, prob_y), color='#000000', **self.text_args)
 
 
             
@@ -347,14 +356,32 @@ class MarkovDisplay:
             else:
                 yoffset += pH/2.0
         
+        elif dx == dy:
+            
+            # Left
+            if DX < 0.0:
+                yoffset -= pH/2.0
+            # Right
+            else:
+                yoffset += pH/2.0
+                
+            # Up
+            if DY > 0.0:
+                xoffset -= pW/2.0
+            # Down
+            else:
+                xoffset += pW/2.0
+    
         # Vert
         else:
             # Up
             if DY > 0.0:
-                xoffset += pW/2.0
+                xoffset += pW*0.50
             # Down
             else:
-                xoffset -= pW/2.0
+                xoffset -= pW*0.50
+                
+                
         
         # Probability to add
         frac = rand_range( 0.2, 0.8 )
